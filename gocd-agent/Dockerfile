@@ -5,7 +5,7 @@ USER root
 RUN apt-get update && apt-get install -y \
 	python-pip \
 	python3-pip \
-  unzip \
+  	unzip \
  	wget
 
 #Install nikto
