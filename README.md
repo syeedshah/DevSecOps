@@ -2,6 +2,8 @@
 
 Tested on Ubuntu 18.04
 
+![Alt text](/gocd_demo.PNG)
+
 ## Installation
 ```
 git clone <this repository link>
