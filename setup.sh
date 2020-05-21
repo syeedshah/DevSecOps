@@ -11,7 +11,7 @@ sudo usermod -aG docker $(whoami)
 sudo chown -R 1000 godata
 
 #Populate gocd config with random ids
-AGENT_VAR = $(openssl rand -hex 15)
+AGENT_VAR=$(openssl rand -hex 15)
 #add agent auto reg to gocd server and to gocd agent
 sed -i -e "s/<aark>/$AGENT_VAR/g" docker-compose.yml
 sed -i -e "s/<aark>/$AGENT_VAR/g" godata/config/cruise-config.xml
