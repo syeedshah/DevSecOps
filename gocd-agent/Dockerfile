@@ -15,5 +15,5 @@ RUN rm master.zip
 
 #Install the git history checker for secrets
 RUN pip3 install trufflehog
-RUN pip install safety
+RUN pip3 install safety
 RUN pip install bandit
