@@ -18,4 +18,4 @@ services:
       - "go-server"
     environment:
       GO_SERVER_URL: http://go-server:8153/go
-      AGENT_AUTO_REGISTER_KEY: '5c4ca590-55b2-4c48-b00a-e54c62704333'
+      AGENT_AUTO_REGISTER_KEY: '<aark>'
