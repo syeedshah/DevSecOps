@@ -6,6 +6,8 @@ services:
     ports:
       - "8153:8153"
       - "8154:8154"
+    volumes:
+      - ./godata:/godata      
   go-agent:
     build:
       context: ./gocd-agent
