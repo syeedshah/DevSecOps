@@ -1,9 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
 <cruise xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="cruise-config.xsd" schemaVersion="135">
-  <server agentAutoRegisterKey="5c4ca590-55b2-4c48-b00a-e54c62704333" webhookSecret="ae10ef6b-78e6-4a54-a57f-c21db12cc792" commandRepositoryLocation="default" serverId="e9d60291-7f5d-48fc-b793-0ad679398ce2" tokenGenerationKey="9b1a0247-4687-44f2-8b0e-bbe5a962b068">
+  <server agentAutoRegisterKey="<aark>" webhookSecret="<whs>" commandRepositoryLocation="default" serverId="<sid>" tokenGenerationKey="<tgk>">
     <backup emailOnSuccess="true" emailOnFailure="true" />
     <artifacts>
       <artifactsDir>artifacts</artifactsDir>
     </artifacts>
   </server>
+  <pipelines group="PipesToUse">
+    <pipeline name="SecretCheck">
+      <materials>
+        <git url="https://github.com/uber/Python-Sample-Application.git" />
+      </materials>
+      <stage name="Test">
+        <jobs>
+          <job name="SecretCheck">
+            <tasks>
+              <exec command="trufflehog">
+                <arg>--regex</arg>
+                <arg>--json</arg>
+                <arg>--entropy=False</arg>
+                <arg>--max_depth=3</arg>
+                <arg>https://github.com/uber/Python-Sample-Application.git</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+    <pipeline name="SoftwareCompositionAnalysis">
+      <materials>
+        <git url="https://github.com/uber/Python-Sample-Application.git" />
+      </materials>
+      <stage name="Test">
+        <jobs>
+          <job name="SCA">
+            <tasks>
+              <exec command="safety">
+                <arg>check</arg>
+                <arg>-r</arg>
+                <arg>requirements.txt</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+    <pipeline name="StaticApplicationSecurityTesting">
+      <materials>
+        <git url="https://github.com/uber/Python-Sample-Application.git" />
+      </materials>
+      <stage name="Test">
+        <jobs>
+          <job name="SAST">
+            <tasks>
+              <exec command="bandit">
+                <arg>-r</arg>
+                <arg>.</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+  </pipelines>
 </cruise>
