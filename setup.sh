@@ -27,5 +27,7 @@ sed -i -e "s/<tgk>/$(openssl rand -hex 15)/g" godata/config/cruise-config.xml
 
 #build the gocd server and agent container
 sudo setfacl -m user:$(whoami):rw /var/run/docker.sock
+#p stands for projectname and also used for network which is gonna be gocdpipeline_default
+#if we add container to network then we can refer to it by container name as its domain name
 docker-compose -p "gocdpipeline" up -d --build
 
