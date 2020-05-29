@@ -8,6 +8,10 @@ RUN apt-get update && apt-get install -y \
   	unzip \
  	wget
 
+#install docker to use dockerised security tools
+RUN apt install -y docker.io
+RUN usermod -aG docker go
+
 #Install nikto
 RUN wget https://github.com/sullo/nikto/archive/master.zip
 RUN mkdir -p ~/niktodast
