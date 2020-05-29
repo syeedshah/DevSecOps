@@ -12,8 +12,12 @@ RUN apt-get update && apt-get install -y \
 RUN wget https://github.com/sullo/nikto/archive/master.zip
 RUN unzip master.zip -d ~/
 RUN rm master.zip
+RUN chown -R go ~/
 
 #Install the git history checker for secrets
 RUN pip3 install trufflehog
 RUN pip3 install safety
 RUN pip install bandit
+
+#downgrade back to go user per least privilege principle
+USER go
