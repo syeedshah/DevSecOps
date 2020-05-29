@@ -1,4 +1,4 @@
-version: '2'
+version: '3'
 services:
   go-server:
     image: gocd/gocd-server:v20.1.0
@@ -14,8 +14,6 @@ services:
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    links:
-      - "go-server"
     depends_on:
       - "go-server"
     environment:
