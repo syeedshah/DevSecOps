@@ -10,9 +10,10 @@ RUN apt-get update && apt-get install -y \
 
 #Install nikto
 RUN wget https://github.com/sullo/nikto/archive/master.zip
-RUN unzip master.zip -d ~/
+RUN mkdir -p ~/niktodast
+RUN unzip master.zip -d ~/niktodast/
 RUN rm master.zip
-RUN chown -R go ~/
+RUN chown -R go ~/niktodast/
 
 #Install the git history checker for secrets
 RUN pip3 install trufflehog
