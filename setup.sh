@@ -10,6 +10,11 @@ sudo usermod -aG docker $(whoami)
 #change owner of godata folder to that of gocd server user which has uid 1000
 sudo chown -R 1000 godata
 
+#add cache for container scanner tool trivy
+mkdir -p ~/trivycache
+#go agent will to access this folder and has 1000 uid
+sudo chown -R 1000 ~/trivycache
+
 #Populate gocd config with random ids
 AGENT_VAR=$(openssl rand -hex 15)
 #add agent auto reg to gocd server and to gocd agent
