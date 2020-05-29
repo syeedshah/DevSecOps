@@ -27,5 +27,5 @@ sed -i -e "s/<tgk>/$(openssl rand -hex 15)/g" godata/config/cruise-config.xml
 
 #build the gocd server and agent container
 sudo setfacl -m user:$(whoami):rw /var/run/docker.sock
-docker-compose up -d --build
+docker-compose up -p "gocdpipeline" -d --build
 
