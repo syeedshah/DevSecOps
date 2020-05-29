@@ -6,14 +6,14 @@
       <artifactsDir>artifacts</artifactsDir>
     </artifacts>
   </server>
-  <pipelines group="PipesToUse">
-    <pipeline name="SecretCheck">
+  <pipelines group="Pipes_To_Use">
+    <pipeline name="Secret_Leak_Check">
       <materials>
         <git url="https://github.com/pawnu/docker-REST.git" />
       </materials>
       <stage name="Test">
         <jobs>
-          <job name="SecretCheck">
+          <job name="trufflehog">
             <tasks>
               <exec command="trufflehog">
                 <arg>--regex</arg>
@@ -28,9 +28,9 @@
         </jobs>
       </stage>
     </pipeline>
-    <pipeline name="SoftwareCompositionAnalysis">
+    <pipeline name="Software_Composition_Analysis">
       <materials>
-        <pipeline pipelineName="SecretCheck" stageName="Test" materialName="CheckOutProject" />
+        <pipeline pipelineName="Secret_Leak_Check" stageName="Test" materialName="CheckOutProject" />
         <git url="https://github.com/pawnu/docker-REST.git" materialName="Project" />
       </materials>
       <stage name="Test" cleanWorkingDir="true">
@@ -48,9 +48,9 @@
         </jobs>
       </stage>
     </pipeline>
-    <pipeline name="StaticApplicationSecurityTesting">
+    <pipeline name="Static_Application_Security_Testing">
       <materials>
-        <pipeline pipelineName="SecretCheck" stageName="Test" materialName="CheckedOutProject" />
+        <pipeline pipelineName="Secret_Leak_Check" stageName="Test" materialName="CheckedOutProject" />
         <git url="https://github.com/pawnu/docker-REST.git" materialName="RESTAPI" />
       </materials>
       <stage name="Test" cleanWorkingDir="true">
@@ -68,7 +68,7 @@
         </jobs>
       </stage>
     </pipeline>
-    <pipeline name="BuildApplication">
+    <pipeline name="Build_Application_Docker">
       <materials>
         <git url="https://github.com/pawnu/docker-REST.git" />
       </materials>
@@ -87,9 +87,9 @@
         </jobs>
       </stage>
     </pipeline>
-    <pipeline name="ContainerImageScan">
+    <pipeline name="Container_Image_Vulnerability_Scan">
       <materials>
-        <pipeline pipelineName="BuildApplication" stageName="Build" />
+        <pipeline pipelineName="Build_Application_Docker" stageName="Build" />
       </materials>
       <stage name="Test">
         <jobs>
@@ -124,9 +124,9 @@
         </jobs>
       </stage>
     </pipeline>
-    <pipeline name="LaunchApplication">
+    <pipeline name="Launch_Application_Docker">
       <materials>
-        <pipeline pipelineName="BuildApplication" stageName="Build" />
+        <pipeline pipelineName="Build_Application_Docker" stageName="Build" />
       </materials>
       <stage name="Deploy">
         <jobs>
@@ -134,12 +134,30 @@
             <tasks>
               <exec command="docker">
                 <arg>run</arg>
-                <arg>--network=gocdpipeline</arg>
+                <arg>--network=gocdpipeline_default</arg>
+                <arg>--network-alias=flaskapp</arg>
                 <arg>-d</arg>
                 <arg>-p</arg>
                 <arg>5000:5000</arg>
                 <arg>flaskapp</arg>
                 <runif status="passed" />
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+    <pipeline name="Dynamic_Application_Security_Testing">
+      <materials>
+        <pipeline pipelineName="Launch_Application_Docker" stageName="Deploy" />
+      </materials>
+      <stage name="Test">
+        <jobs>
+          <job name="RunNikto">
+            <tasks>
+              <exec command="/opt/nikto/nikto-master/program/nikto.pl">
+                <arg>-h</arg>
+                <arg>http://flaskapp:5000/</arg>
               </exec>
             </tasks>
           </job>
