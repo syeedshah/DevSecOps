@@ -26,6 +26,6 @@ sed -i -e "s/<sid>/$(openssl rand -hex 15)/g" godata/config/cruise-config.xml
 sed -i -e "s/<tgk>/$(openssl rand -hex 15)/g" godata/config/cruise-config.xml
 
 #build the gocd server and agent container
+sudo setfacl -m user:$(whoami):rw /var/run/docker.sock
 docker-compose up -d --build
 
-sudo setfacl -m user:$(whoami):rw /var/run/docker.sock
