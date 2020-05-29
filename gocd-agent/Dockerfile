@@ -14,10 +14,10 @@ RUN usermod -aG docker go
 
 #Install nikto
 RUN wget https://github.com/sullo/nikto/archive/master.zip
-RUN mkdir -p ~/niktodast
-RUN unzip master.zip -d ~/niktodast/
+RUN mkdir -p /opt/nikto
+RUN unzip master.zip -d /opt/nikto/
 RUN rm master.zip
-RUN chown -R go ~/niktodast/
+RUN chown -R go /opt/nikto/
 
 #Install the git history checker for secrets
 RUN pip3 install trufflehog
