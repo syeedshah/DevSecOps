@@ -71,8 +71,6 @@
     <pipeline name="BuildApplication">
       <materials>
         <git url="https://github.com/pawnu/docker-REST.git" />
-        <pipeline pipelineName="SoftwareCompositionAnalysis" stageName="Test" materialName="SCA" />
-        <pipeline pipelineName="StaticApplicationSecurityTesting" stageName="Test" materialName="SAST" />
       </materials>
       <stage name="Build">
         <jobs>
@@ -116,7 +114,31 @@
                 <arg>-v</arg>
                 <arg>/var/run/docker.sock:/var/run/docker.sock</arg>
                 <arg>aquasec/trivy</arg>
+                <arg>--exit-code</arg>
+                <arg>1</arg>
                 <arg>flaskapp:latest</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+    <pipeline name="LaunchApplication">
+      <materials>
+        <pipeline pipelineName="BuildApplication" stageName="Build" />
+      </materials>
+      <stage name="Deploy">
+        <jobs>
+          <job name="dockerRun">
+            <tasks>
+              <exec command="docker">
+                <arg>run</arg>
+                <arg>--network=gocdpipeline</arg>
+                <arg>-d</arg>
+                <arg>-p</arg>
+                <arg>5000:5000</arg>
+                <arg>flaskapp</arg>
                 <runif status="passed" />
               </exec>
             </tasks>
