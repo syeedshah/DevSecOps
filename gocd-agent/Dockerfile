@@ -3,7 +3,6 @@ FROM gocd/gocd-agent-ubuntu-18.04:v20.1.0
 #use root to install tools
 USER root
 RUN apt-get update && apt-get install -y \
-	python-pip \
 	python3-pip \
   	unzip \
  	wget
@@ -22,7 +21,7 @@ RUN chown -R go /opt/nikto/
 #Install the git history checker for secrets
 RUN pip3 install trufflehog
 RUN pip3 install safety
-RUN pip install bandit
+RUN pip3 install bandit
 
 #downgrade back to go user per least privilege principle
 USER go
