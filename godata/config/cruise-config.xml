@@ -95,25 +95,11 @@
         <jobs>
           <job name="TrivyScan">
             <tasks>
-              <exec command="docker">
-                <arg>run</arg>
-                <arg>--rm</arg>
-                <arg>-v</arg>
-                <arg>/home/ubuntu/trivycache/:/root/.cache/</arg>
-                <arg>-v</arg>
-                <arg>/var/run/docker.sock:/var/run/docker.sock</arg>
-                <arg>aquasec/trivy</arg>
+              <exec command="trivy">
                 <arg>--clear-cache</arg>
                 <runif status="passed" />
               </exec>
-              <exec command="docker">
-                <arg>run</arg>
-                <arg>--rm</arg>
-                <arg>-v</arg>
-                <arg>/home/ubuntu/trivycache/:/root/.cache/</arg>
-                <arg>-v</arg>
-                <arg>/var/run/docker.sock:/var/run/docker.sock</arg>
-                <arg>aquasec/trivy</arg>
+              <exec command="trivy">
                 <arg>--exit-code</arg>
                 <arg>1</arg>
                 <arg>flaskapp:latest</arg>
