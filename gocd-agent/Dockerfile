@@ -5,7 +5,10 @@ USER root
 RUN apt-get update && apt-get install -y \
 	python3-pip \
   	unzip \
- 	wget
+ 	wget \
+	apt-transport-https \
+	gnupg \
+	lsb-release
 
 #install docker to use dockerised security tools
 RUN apt install -y docker.io
@@ -17,6 +20,14 @@ RUN mkdir -p /opt/nikto
 RUN unzip master.zip -d /opt/nikto/
 RUN rm master.zip
 RUN chown -R go /opt/nikto/
+
+#Install trivy
+RUN mkdir -p /opt/trivycache
+RUN chown -R go /opt/trivycache
+RUN wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+RUN echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+RUN apt-get update
+RUN apt-get install trivy
 
 #Install the git history checker for secrets
 RUN pip3 install trufflehog
