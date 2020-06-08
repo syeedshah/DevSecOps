@@ -118,6 +118,11 @@
         <jobs>
           <job name="dockerRun">
             <tasks>
+              <exec command="sh">
+                <arg>-c</arg>
+                <arg>docker rm $(docker stop $(docker ps -a -q --filter ancestor=flaskapp --format="{{.ID}}")) || true</arg>
+                <runif status="passed" />
+              </exec>
               <exec command="docker">
                 <arg>run</arg>
                 <arg>--network=gocdpipeline_default</arg>
