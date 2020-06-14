@@ -156,4 +156,306 @@
       </stage>
     </pipeline>
   </pipelines>
+  <pipelines group="PythonApp_RnD_Engagement">
+    <pipeline name="PythonApp_Secret_Leak">
+      <materials>
+        <git url="https://github.com/pawnu/docker-REST.git" />
+      </materials>
+      <stage name="Test">
+        <jobs>
+          <job name="trufflehog">
+            <tasks>
+              <exec command="sh">
+                <arg>-c</arg>
+                <arg>trufflehog --regex --json --entropy=False --max_depth=3 https://github.com/pawnu/docker-REST.git &gt; trufflehog.json</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+            <artifacts>
+              <artifact type="build" src="trufflehog.json" />
+            </artifacts>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+    <pipeline name="PythonApp_SCA">
+      <materials>
+        <git url="https://github.com/pawnu/docker-REST.git" materialName="Project" />
+        <pipeline pipelineName="PythonApp_Secret_Leak" stageName="Test" materialName="PA_SL" />
+      </materials>
+      <stage name="Test" cleanWorkingDir="true">
+        <jobs>
+          <job name="SCA">
+            <tasks>
+              <exec command="sh">
+                <arg>-c</arg>
+                <arg>safety check -r requirements.txt --json &gt; safety.json</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+            <artifacts>
+              <artifact type="build" src="safety.json" />
+            </artifacts>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+    <pipeline name="PythonApp_SAST">
+      <materials>
+        <git url="https://github.com/pawnu/docker-REST.git" materialName="RESTAPI" />
+        <pipeline pipelineName="PythonApp_Secret_Leak" stageName="Test" materialName="PA_SL" />
+      </materials>
+      <stage name="Test" cleanWorkingDir="true">
+        <jobs>
+          <job name="SAST">
+            <tasks>
+              <exec command="sh">
+                <arg>-c</arg>
+                <arg>bandit -r -f json -o bandit.json .|| true</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+            <artifacts>
+              <artifact type="build" src="bandit.json" />
+            </artifacts>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+    <pipeline name="PythonApp_CVA">
+      <materials>
+        <pipeline pipelineName="PythonApp_Build_Container" stageName="Build" materialName="PA_Build" />
+      </materials>
+      <stage name="Test">
+        <jobs>
+          <job name="TrivyScan">
+            <tasks>
+              <exec command="trivy">
+                <arg>--clear-cache</arg>
+                <runif status="passed" />
+              </exec>
+              <exec command="trivy">
+                <arg>--format</arg>
+                <arg>json</arg>
+                <arg>--output</arg>
+                <arg>trivy.json</arg>
+                <arg>pa_flaskapp:latest</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+            <artifacts>
+              <artifact type="build" src="trivy.json" />
+            </artifacts>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+    <pipeline name="PythonApp_Build_Container">
+      <materials>
+        <git url="https://github.com/pawnu/docker-REST.git" />
+        <pipeline pipelineName="PythonApp_SAST" stageName="Test" materialName="PA_SAST" />
+        <pipeline pipelineName="PythonApp_SCA" stageName="Test" materialName="PA_SCA" />
+      </materials>
+      <stage name="Build">
+        <jobs>
+          <job name="DockerBuild">
+            <tasks>
+              <exec command="docker">
+                <arg>build</arg>
+                <arg>-t</arg>
+                <arg>pa_flaskapp</arg>
+                <arg>.</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+    <pipeline name="PythonApp_RunContainer">
+      <materials>
+        <pipeline pipelineName="PythonApp_CVA" stageName="Test" materialName="PA_CVA" />
+      </materials>
+      <stage name="Deploy">
+        <jobs>
+          <job name="dockerRun">
+            <tasks>
+              <exec command="sh">
+                <arg>-c</arg>
+                <arg>docker rm $(docker stop $(docker ps -a -q --filter ancestor=pa_flaskapp --format="{{.ID}}")) || true</arg>
+                <runif status="passed" />
+              </exec>
+              <exec command="docker">
+                <arg>run</arg>
+                <arg>--network=gocdpipeline_default</arg>
+                <arg>--network-alias=pa_flaskapp</arg>
+                <arg>-d</arg>
+                <arg>-p</arg>
+                <arg>5001:5001</arg>
+                <arg>pa_flaskapp</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+    <pipeline name="PythonApp_DAST">
+      <materials>
+        <pipeline pipelineName="PythonApp_RunContainer" stageName="Deploy" materialName="PA_Run" />
+      </materials>
+      <stage name="Test">
+        <jobs>
+          <job name="RunNikto">
+            <tasks>
+              <exec command="sh">
+                <arg>-c</arg>
+                <arg>/opt/nikto/nikto-master/program/nikto.pl -h http://pa_flaskapp:5001/ -output nikto.xml || true</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+            <artifacts>
+              <artifact type="build" src="nikto.xml" />
+            </artifacts>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+    <pipeline name="Upload_Vulnerability_Result">
+      <materials>
+        <pipeline pipelineName="PythonApp_DAST" stageName="Test" />
+        <pipeline pipelineName="PythonApp_CVA" stageName="Test" ignoreForScheduling="true" materialName="PA_CVA" />
+        <pipeline pipelineName="PythonApp_SAST" stageName="Test" ignoreForScheduling="true" materialName="PA_SAST" />
+        <pipeline pipelineName="PythonApp_SCA" stageName="Test" ignoreForScheduling="true" materialName="PA_SCA" />
+        <pipeline pipelineName="PythonApp_Secret_Leak" stageName="Test" ignoreForScheduling="true" materialName="PA_SL" />
+      </materials>
+      <stage name="Test" cleanWorkingDir="true">
+        <jobs>
+          <job name="defectdojo">
+            <tasks>
+              <exec command="pwd">
+                <runif status="passed" />
+              </exec>
+              <fetchartifact artifactOrigin="gocd" srcfile="safety.json" pipeline="PythonApp_SCA" stage="Test" job="SCA">
+                <runif status="passed" />
+              </fetchartifact>
+              <fetchartifact artifactOrigin="gocd" srcfile="bandit.json" pipeline="PythonApp_SAST" stage="Test" job="SAST">
+                <runif status="passed" />
+              </fetchartifact>
+              <fetchartifact artifactOrigin="gocd" srcfile="trivy.json" pipeline="PythonApp_CVA" stage="Test" job="TrivyScan">
+                <runif status="passed" />
+              </fetchartifact>
+              <fetchartifact artifactOrigin="gocd" srcfile="trufflehog.json" pipeline="PythonApp_Secret_Leak" stage="Test" job="trufflehog">
+                <runif status="passed" />
+              </fetchartifact>
+              <fetchartifact artifactOrigin="gocd" srcfile="nikto.xml" pipeline="PythonApp_DAST" stage="Test" job="RunNikto">
+                <runif status="passed" />
+              </fetchartifact>
+              <exec command="ls">
+                <arg>-la</arg>
+                <runif status="passed" />
+              </exec>
+              <exec command="curl">
+                <arg>--fail</arg>
+                <arg>--header</arg>
+                <arg>Authorization: ApiKey admin:7a5d5f69ce077fdd44837de05877cad76f303a51</arg>
+                <arg>--form</arg>
+                <arg>file=@safety.json</arg>
+                <arg>--form</arg>
+                <arg>scan_type=Safety Scan</arg>
+                <arg>--form</arg>
+                <arg>engagement=/api/v1/engagements/1/</arg>
+                <arg>--form</arg>
+                <arg>active=true</arg>
+                <arg>--form</arg>
+                <arg>verified=True</arg>
+                <arg>--form</arg>
+                <arg>scan_date=2020-06-14</arg>
+                <arg>http://nginx:8080/api/v1/importscan/</arg>
+                <arg>--verbose</arg>
+              </exec>
+              <exec command="curl">
+                <arg>--fail</arg>
+                <arg>--header</arg>
+                <arg>Authorization: ApiKey admin:7a5d5f69ce077fdd44837de05877cad76f303a51</arg>
+                <arg>--form</arg>
+                <arg>file=@bandit.json</arg>
+                <arg>--form</arg>
+                <arg>scan_type=Bandit Scan</arg>
+                <arg>--form</arg>
+                <arg>engagement=/api/v1/engagements/1/</arg>
+                <arg>--form</arg>
+                <arg>active=true</arg>
+                <arg>--form</arg>
+                <arg>verified=True</arg>
+                <arg>--form</arg>
+                <arg>scan_date=2020-06-14</arg>
+                <arg>http://nginx:8080/api/v1/importscan/</arg>
+                <arg>--verbose</arg>
+                <runif status="passed" />
+              </exec>
+              <exec command="curl">
+                <arg>--fail</arg>
+                <arg>--header</arg>
+                <arg>Authorization: ApiKey admin:7a5d5f69ce077fdd44837de05877cad76f303a51</arg>
+                <arg>--form</arg>
+                <arg>file=@trivy.json</arg>
+                <arg>--form</arg>
+                <arg>scan_type=Trivy Scan</arg>
+                <arg>--form</arg>
+                <arg>engagement=/api/v1/engagements/1/</arg>
+                <arg>--form</arg>
+                <arg>active=true</arg>
+                <arg>--form</arg>
+                <arg>verified=True</arg>
+                <arg>--form</arg>
+                <arg>scan_date=2020-06-14</arg>
+                <arg>http://nginx:8080/api/v1/importscan/</arg>
+                <arg>--verbose</arg>
+              </exec>
+              <exec command="curl">
+                <arg>--fail</arg>
+                <arg>--header</arg>
+                <arg>Authorization: ApiKey admin:7a5d5f69ce077fdd44837de05877cad76f303a51</arg>
+                <arg>--form</arg>
+                <arg>file=@trufflehog.json</arg>
+                <arg>--form</arg>
+                <arg>scan_type=Trufflehog Scan</arg>
+                <arg>--form</arg>
+                <arg>engagement=/api/v1/engagements/1/</arg>
+                <arg>--form</arg>
+                <arg>active=true</arg>
+                <arg>--form</arg>
+                <arg>verified=True</arg>
+                <arg>--form</arg>
+                <arg>scan_date=2020-06-14</arg>
+                <arg>http://nginx:8080/api/v1/importscan/</arg>
+                <arg>--verbose</arg>
+              </exec>
+              <exec command="curl">
+                <arg>--fail</arg>
+                <arg>--header</arg>
+                <arg>Authorization: ApiKey admin:7a5d5f69ce077fdd44837de05877cad76f303a51</arg>
+                <arg>--form</arg>
+                <arg>file=@nikto.xml</arg>
+                <arg>--form</arg>
+                <arg>scan_type=Nikto Scan</arg>
+                <arg>--form</arg>
+                <arg>engagement=/api/v1/engagements/1/</arg>
+                <arg>--form</arg>
+                <arg>active=true</arg>
+                <arg>--form</arg>
+                <arg>verified=True</arg>
+                <arg>--form</arg>
+                <arg>scan_date=2020-06-14</arg>
+                <arg>http://nginx:8080/api/v1/importscan/</arg>
+                <arg>--verbose</arg>
+                <runif status="passed" />
+              </exec>
+            </tasks>
+          </job>
+        </jobs>
+      </stage>
+    </pipeline>
+  </pipelines>
 </cruise>
