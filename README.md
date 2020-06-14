@@ -34,7 +34,6 @@ Run the pipes you see, configure them, mix and match to create your pipelines.
 
 ![gocd_pipeline](https://user-images.githubusercontent.com/11514346/84599383-8be41080-ae69-11ea-952c-51f2ad97f4eb.PNG)
 
-
 ### Toolchain
 1. Planning - `OWASP ASVS`
 2. CI/CD - `Go CD` 
