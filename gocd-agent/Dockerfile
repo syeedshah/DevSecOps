@@ -8,7 +8,8 @@ RUN apt-get update && apt-get install -y \
  	wget \
 	apt-transport-https \
 	gnupg \
-	lsb-release
+	lsb-release \
+	curl
 
 #install docker to use dockerised security tools
 RUN apt install -y docker.io
