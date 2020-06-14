@@ -2,7 +2,11 @@
 sudo apt-get update
 sudo apt-get install acl -y
 sudo apt install docker.io -y
-sudo apt-get install -y docker-compose
+#sudo apt-get install -y docker-compose
+#install latest docker compose version
+sudo curl -L "https://github.com/docker/compose/releases/download/1.26.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 
 #let non root user user docker
 sudo usermod -aG docker $(whoami)
@@ -35,3 +39,12 @@ sudo setfacl -m user:$(whoami):rw /var/run/docker.sock
 #if we add container to network then we can refer to it by container name as its domain name
 docker-compose -p "gocdpipeline" up -d --build
 
+#install defect dojo and put it in same project/network as gocd
+git clone https://github.com/DefectDojo/django-DefectDojo
+cd django-DefectDojo
+docker-compose -p "gocdpipeline" up -d --build
+
+#printout gocd username and password
+echo "gocd user: admin"
+echo "gocd pass:"
+docker-compose -p "gocdpipeline" logs initializer | grep "Admin password:"
