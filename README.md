@@ -7,7 +7,7 @@ Tested on Ubuntu 18.04
 ## Installation
 ```
 git clone <this repository link>
-cd gocd_demo
+cd GoCD_Vuln_Mgt
 sudo bash setup.sh
 ```
 
