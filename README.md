@@ -30,7 +30,24 @@ OR
 
 Run the pipes you see, configure them, mix and match to create your pipelines.
 
-## DefectDojo slack integration
+## Example pipeline
+
+![gocd_pipeline](https://user-images.githubusercontent.com/11514346/84599383-8be41080-ae69-11ea-952c-51f2ad97f4eb.PNG)
+
+
+### Toolchain
+1. Planning - `OWASP ASVS`
+2. CI/CD - `Go CD` 
+3. secret-check - `trufflehog`
+4. SCA - `safety`
+5. SAST - `bandit`
+6. DAST - `nikto`
+7. Container Vulnerability Analysis - `trivy`
+8. Vulnerability Manager - `DefectDojo`
+9. Monitoring - `Slack`
+10. Environment - `AWS`
+
+### DefectDojo slack integration
 **Slack**
 
 1. Create a Slack app if you don't already have one, or select an existing app that you've created.
