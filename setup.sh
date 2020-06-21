@@ -12,7 +12,7 @@ sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 sudo usermod -aG docker $(whoami)
 
 #change owner of godata folder to that of gocd server user which has uid 1000
-sudo chown -R 1000 godata
+sudo chown -R 1000 godata/
 
 # lets install trivy in ubuntu agent instead of docker
 ##############################################################
