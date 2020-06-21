@@ -36,6 +36,9 @@ sudo chown -R 1000 godata/
 
 #build the gocd server and agent container
 sudo setfacl -m user:$(whoami):rw /var/run/docker.sock
+#the user with uid 1000 in host
+sudo setfacl -m user:$(id -nu 1000):rw /var/run/docker.sock
+
 #p stands for projectname and also used for network which is gonna be gocdpipeline_default
 #if we add container to network then we can refer to it by container name as its domain name
 docker-compose -p "gocdpipeline" up -d --build
