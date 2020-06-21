@@ -11,9 +11,6 @@ sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 #let non root user user docker
 sudo usermod -aG docker $(whoami)
 
-#change owner of godata folder to that of gocd server user which has uid 1000
-sudo chown -R 1000 godata/
-
 # lets install trivy in ubuntu agent instead of docker
 ##############################################################
 #add cache for container scanner tool trivy
@@ -32,6 +29,10 @@ sed -i -e "s/<aark>/$AGENT_VAR/g" godata/config/cruise-config.xml
 sed -i -e "s/<whs>/$(openssl rand -hex 15)/g" godata/config/cruise-config.xml
 sed -i -e "s/<sid>/$(openssl rand -hex 15)/g" godata/config/cruise-config.xml
 sed -i -e "s/<tgk>/$(openssl rand -hex 15)/g" godata/config/cruise-config.xml
+
+#change owner of godata folder to that of gocd server user which has uid 1000
+#change ownership after cruise-config is edited by the user running script
+sudo chown -R 1000 godata/
 
 #build the gocd server and agent container
 sudo setfacl -m user:$(whoami):rw /var/run/docker.sock
