@@ -23,8 +23,6 @@ RUN rm master.zip
 RUN chown -R go /opt/nikto/
 
 #Install trivy
-RUN mkdir -p /opt/trivycache
-RUN chown -R go /opt/trivycache
 RUN wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | apt-key add -
 RUN echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | tee -a /etc/apt/sources.list.d/trivy.list
 RUN apt-get update
